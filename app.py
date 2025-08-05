@@ -65,7 +65,7 @@ def chat():
         return jsonify({"error": "Keine Nachrichten übergeben."}), 400
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4.5-turbo",  # oder "gpt-4o" bzw. zukünftige Modelle
+            model="gpt-3.5-turbo",  # oder "gpt-4o" bzw. zukünftige Modelle
             messages=messages,
             temperature=0.7,
         )
