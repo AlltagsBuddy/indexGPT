@@ -54,7 +54,8 @@ def handle_prompt():
         answer = response["choices"][0]["message"]["content"].strip()
         return jsonify({"response": answer})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Fehler im Chat-Endpunkt: {e}")  # wird im Render-Log sichtbar
+        return jsonify({"response": str(e)}), 500
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -72,7 +73,9 @@ def chat():
         answer = response["choices"][0]["message"]["content"].strip()
         return jsonify({"response": answer})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Fehler im Chat-Endpunkt: {e}")  # wird im Render-Log sichtbar
+        return jsonify({"response": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
