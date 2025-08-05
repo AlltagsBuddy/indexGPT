@@ -1,0 +1,227 @@
+<!--
+  Title: AlltagsBuddy Chat
+
+  Beschreibung:
+  Diese Unterseite implementiert eine einfache Chat‑Oberfläche im Stil der AlltagsBuddy‑Website. Der Besucher
+  kann hier eigene Fragen und Anfragen stellen. Die Nachrichten werden an einen Backend‑Endpunkt gesendet, der
+  die OpenAI‑API verwendet (beispielsweise auf Render gehostet). Die Chat‑Oberfläche bleibt auf dem
+  AlltagsBuddy‑Design basierend und enthält eine verlaufende Anzeige der Konversation. Der Endpunkt für den
+  Datenaustausch kann in der JavaScript‑Funktion angepasst werden (standardmäßig auf "/api/chat").
+
+  Hinweise:
+  - Stellen Sie sicher, dass das Backend die Konversation anhand des vorhandenen Verlaufs behandelt. Der
+    Nachrichtenverlauf wird in einem Array „messages“ gespeichert und bei jeder Anfrage mitgesendet.
+  - Passen Sie den Endpunkt in der Funktion sendMessage() an, falls Sie einen anderen API‑Pfad verwenden.
+-->
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlltagsBuddy Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #1BC7C2;
+      --accent: #FF6B00;
+      --background: #f9f9f9;
+      --text: #333333;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--text);
+    }
+    header {
+      background-color: #ffffff;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+    }
+    .logo-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    img.logo {
+      width: 40px;
+      height: auto;
+    }
+    .site-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .cta-button {
+      background-color: var(--accent);
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      text-decoration: none;
+    }
+    main {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .chat-box {
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 75vh;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+      margin-bottom: 20px;
+    }
+    .message {
+      margin-bottom: 15px;
+      max-width: 80%;
+      line-height: 1.4;
+    }
+    .message.user {
+      align-self: flex-end;
+      background-color: var(--primary);
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 14px 14px 0 14px;
+    }
+    .message.bot {
+      align-self: flex-start;
+      background-color: #eeeeee;
+      color: #333333;
+      padding: 10px 14px;
+      border-radius: 14px 14px 14px 0;
+    }
+    form {
+      display: flex;
+      gap: 10px;
+      margin-top: auto;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button[type="submit"] {
+      background-color: var(--accent);
+      color: #ffffff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.2s ease;
+    }
+    button[type="submit"]:hover {
+      background-color: #e35f00;
+    }
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+    footer a {
+      color: #ffffff;
+      margin: 0 8px;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-wrapper">
+      <img src="https://alltags-buddy.com/Bilder/logo.png" alt="AlltagsBuddy Logo" class="logo" />
+      <span class="site-title">AlltagsBuddy Chat</span>
+    </div>
+    <a href="index.html" class="cta-button">Zurück zur Startseite</a>
+  </header>
+  <main>
+    <h1>Chat mit deinem KI‑Buddy</h1>
+    <div class="chat-box">
+      <div id="messages" class="messages"></div>
+      <form id="chatForm">
+        <input type="text" id="userInput" placeholder="Deine Nachricht..." autocomplete="off" required />
+        <button type="submit">Senden</button>
+      </form>
+    </div>
+  </main>
+  <footer>
+    © 2025 AlltagsBuddy – Dein smarter KI‑Buddy&nbsp;•&nbsp;
+    <a href="datenschutz.html">Datenschutzerklärung</a>
+    <a href="impressum.html">Impressum</a>
+  </footer>
+  <script>
+    // Chatverlauf speichern
+    const messages = [];
+
+    // Nachricht an Backend senden und Antwort anzeigen
+    async function sendMessage(event) {
+      event.preventDefault();
+      const inputElem = document.getElementById('userInput');
+      const msg = inputElem.value.trim();
+      if (!msg) return;
+      // Nutzer-Nachricht zur Anzeige hinzufügen
+      appendMessage(msg, 'user');
+      messages.push({ role: 'user', content: msg });
+      inputElem.value = '';
+      // Zwischenstatus
+      appendMessage('⏳ Lade Antwort ...', 'bot', true);
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages })
+        });
+        const data = await response.json();
+        // Entferne den Ladeplatzhalter (letzte bot-Nachricht)
+        const placeholder = document.querySelector('.message.loading');
+        if (placeholder) placeholder.remove();
+        const answer = data.response || 'Es gab einen Fehler bei der Antwort.';
+        messages.push({ role: 'assistant', content: answer });
+        appendMessage(answer, 'bot');
+      } catch (error) {
+        const placeholder = document.querySelector('.message.loading');
+        if (placeholder) placeholder.remove();
+        appendMessage('Fehler: Keine Antwort vom Server.', 'bot');
+      }
+    }
+
+    function appendMessage(text, sender, loading = false) {
+      const messagesContainer = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.classList.add(sender);
+      if (loading) div.classList.add('loading');
+      div.textContent = text;
+      messagesContainer.appendChild(div);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    document.getElementById('chatForm').addEventListener('submit', sendMessage);
+  </script>
+</body>
+</html>
