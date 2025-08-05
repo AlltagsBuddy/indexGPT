@@ -2,16 +2,17 @@
   Title: AlltagsBuddy Chat
 
   Beschreibung:
-  Diese Unterseite implementiert eine einfache Chat‑Oberfläche im Stil der AlltagsBuddy‑Website. Der Besucher
-  kann hier eigene Fragen und Anfragen stellen. Die Nachrichten werden an einen Backend‑Endpunkt gesendet, der
-  die OpenAI‑API verwendet (beispielsweise auf Render gehostet). Die Chat‑Oberfläche bleibt auf dem
-  AlltagsBuddy‑Design basierend und enthält eine verlaufende Anzeige der Konversation. Der Endpunkt für den
-  Datenaustausch kann in der JavaScript‑Funktion angepasst werden (standardmäßig auf "/api/chat").
+  Diese Unterseite implementiert eine vollständige Chat‑Oberfläche im Stil der AlltagsBuddy‑Website. Der Besucher
+  kann eigene Fragen stellen; die Nachrichten werden an einen Backend‑Endpunkt gesendet, der die OpenAI‑API
+  verwendet (z. B. auf Render gehostet). Die Chat‑Oberfläche enthält einen Gesprächsverlauf und ein
+  Eingabefeld. Passen Sie bei Bedarf die URL in der JavaScript‑Funktion sendMessage() an, falls Ihr Backend
+  unter einer anderen Domain oder einem anderen Pfad erreichbar ist.
 
-  Hinweise:
-  - Stellen Sie sicher, dass das Backend die Konversation anhand des vorhandenen Verlaufs behandelt. Der
-    Nachrichtenverlauf wird in einem Array „messages“ gespeichert und bei jeder Anfrage mitgesendet.
-  - Passen Sie den Endpunkt in der Funktion sendMessage() an, falls Sie einen anderen API‑Pfad verwenden.
+  Wichtige Hinweise:
+  - Der Endpunkt ist hier auf die absolute URL Ihrer Render‑Instanz gesetzt: https://indexgpt.onrender.com/api/chat
+    Sollten Sie eine andere Domain nutzen, ändern Sie diese entsprechend.
+  - Der Nachrichtenverlauf wird lokal im Array `messages` gespeichert und bei jeder Anfrage mitgesendet, damit
+    der Sprachmodell‑Endpunkt den Kontext kennt.
 -->
 
 <!DOCTYPE html>
@@ -175,7 +176,7 @@
     <a href="impressum.html">Impressum</a>
   </footer>
   <script>
-    // Chatverlauf speichern
+    // Chatverlauf lokal speichern
     const messages = [];
 
     // Nachricht an Backend senden und Antwort anzeigen
@@ -184,29 +185,29 @@
       const inputElem = document.getElementById('userInput');
       const msg = inputElem.value.trim();
       if (!msg) return;
-      // Nutzer-Nachricht zur Anzeige hinzufügen
+
+      // Nutzernachricht zur Anzeige hinzufügen
       appendMessage(msg, 'user');
       messages.push({ role: 'user', content: msg });
       inputElem.value = '';
-      // Zwischenstatus
+
+      // Ladeplatzhalter anzeigen
       appendMessage('⏳ Lade Antwort ...', 'bot', true);
       try {
-        // In chat.html ersetzen:
         const response = await fetch('https://indexgpt.onrender.com/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages })
-        });
-
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages })
         });
         const data = await response.json();
-        // Entferne den Ladeplatzhalter (letzte bot-Nachricht)
+        // Ladeplatzhalter entfernen
         const placeholder = document.querySelector('.message.loading');
         if (placeholder) placeholder.remove();
         const answer = data.response || 'Es gab einen Fehler bei der Antwort.';
         messages.push({ role: 'assistant', content: answer });
         appendMessage(answer, 'bot');
       } catch (error) {
+        // Bei Fehler: Ladeplatzhalter entfernen und Fehlermeldung ausgeben
         const placeholder = document.querySelector('.message.loading');
         if (placeholder) placeholder.remove();
         appendMessage('Fehler: Keine Antwort vom Server.', 'bot');
