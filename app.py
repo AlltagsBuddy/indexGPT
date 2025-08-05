@@ -1,14 +1,24 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import openai
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Nur lokal nötig
+# Nur lokal nötig – auf Render kannst du das ignorieren, wenn du Umgebungsvariable manuell setzt
+load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 
+# API-Key aus Umgebungsvariable holen
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+
+# Route für Startseite (HTML-Formular)
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+# API-Route für Prompteingabe
 @app.route("/api/prompt", methods=["POST"])
 def handle_prompt():
     data = request.get_json()
@@ -28,5 +38,7 @@ def handle_prompt():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# Lokaler Start (nicht notwendig bei Render)
 if __name__ == "__main__":
     app.run(debug=True)
