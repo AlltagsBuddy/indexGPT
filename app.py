@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Flask‑App initialisieren und CORS aktivieren
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, template_folder="")
 CORS(app)
 
 # OpenAI‑API‑Schlüssel aus der Umgebung lesen
