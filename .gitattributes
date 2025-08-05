@@ -1,0 +1,2 @@
+# Vorlagen ignorieren, da sie hauptsächlich HTML enthalten
+templates/* linguist-vendored
