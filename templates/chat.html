@@ -1,20 +1,3 @@
-<!--
-  Title: AlltagsBuddy Chat
-
-  Beschreibung:
-  Diese Unterseite implementiert eine vollständige Chat‑Oberfläche im Stil der AlltagsBuddy‑Website. Der Besucher
-  kann eigene Fragen stellen; die Nachrichten werden an einen Backend‑Endpunkt gesendet, der die OpenAI‑API
-  verwendet (z. B. auf Render gehostet). Die Chat‑Oberfläche enthält einen Gesprächsverlauf und ein
-  Eingabefeld. Passen Sie bei Bedarf die URL in der JavaScript‑Funktion sendMessage() an, falls Ihr Backend
-  unter einer anderen Domain oder einem anderen Pfad erreichbar ist.
-
-  Wichtige Hinweise:
-  - Der Endpunkt ist hier auf die absolute URL Ihrer Render‑Instanz gesetzt: https://indexgpt.onrender.com/api/chat
-    Sollten Sie eine andere Domain nutzen, ändern Sie diese entsprechend.
-  - Der Nachrichtenverlauf wird lokal im Array `messages` gespeichert und bei jeder Anfrage mitgesendet, damit
-    der Sprachmodell‑Endpunkt den Kontext kennt.
--->
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -158,7 +141,8 @@
       <img src="https://alltags-buddy.com/Bilder/logo.png" alt="AlltagsBuddy Logo" class="logo" />
       <span class="site-title">AlltagsBuddy Chat</span>
     </div>
-    <a href="../../index.html" class="cta-button">Zurück zur Startseite</a>
+    <!-- absolute Pfad zur Startseite, weil diese im Root liegt -->
+    <a href="/index.html" class="cta-button">Zurück zur Startseite</a>
   </header>
   <main>
     <h1>Chat mit deinem KI‑Buddy</h1>
@@ -172,8 +156,8 @@
   </main>
   <footer>
     © 2025 AlltagsBuddy – Dein smarter KI‑Buddy&nbsp;•&nbsp;
-    <a href="datenschutz.html">Datenschutzerklärung</a>
-    <a href="impressum.html">Impressum</a>
+    <a href="/datenschutz.html">Datenschutzerklärung</a>
+    <a href="/impressum.html">Impressum</a>
   </footer>
   <script>
     // Chatverlauf lokal speichern

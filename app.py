@@ -9,40 +9,45 @@ Die Reihenfolge der Initialisierung wurde korrigiert: Erst wird die Flask‑App 
 dann CORS aktiviert. Anschließend wird der OpenAI‑API‑Key geladen.
 """
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 import openai
 import os
 from dotenv import load_dotenv
 
-# Lokale Umgebungsvariablen laden (auf Render optional, da Variablen dort über das Dashboard gesetzt werden)
+# Umgebungsvariablen laden
 load_dotenv()
 
-# Flask‑App initialisieren und CORS aktivieren
-app = Flask(__name__, template_folder="")
+# Flask initialisieren (Templates im Unterordner 'templates', statische Dateien im Wurzelverzeichnis)
+app = Flask(__name__, template_folder="templates", static_folder="")
+
+# CORS aktivieren
 CORS(app)
 
-# OpenAI‑API‑Schlüssel aus der Umgebung lesen
+# API‑Key setzen
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/")
 def index() -> str:
-    """Liefert die Startseite der Anwendung."""
-    return render_template("index.html")
+    """Liefert die Startseite aus dem Wurzelverzeichnis."""
+    return send_from_directory('.', 'index.html')
+
+# Optional: wenn Sie chat.html über Flask ausliefern wollen
+@app.route("/chat.html")
+def chat_page():
+    """Liefert die Chat‑Seite aus dem templates‑Verzeichnis."""
+    return send_from_directory('templates', 'chat.html')
 
 @app.route("/api/prompt", methods=["POST"])
 def handle_prompt():
-    """
-    Verarbeitet einen einzelnen Prompt von der Frontend‑Seite.
-    Erwartet JSON im Format {"prompt": "..."} und gibt die Antwort der OpenAI‑API zurück.
-    """
+    """Verarbeitet einen einzelnen Prompt und gibt die Antwort der OpenAI‑API zurück."""
     data = request.get_json(silent=True) or {}
     user_prompt = data.get("prompt", "").strip()
     if not user_prompt:
         return jsonify({"error": "Kein Prompt übergeben."}), 400
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4.5-turbo",  # aktuelles Modell
+            model="gpt-4o",  # nutzen Sie ein Modell, zu dem Sie Zugang haben
             messages=[{"role": "user", "content": user_prompt}],
             temperature=0.7,
         )
@@ -53,19 +58,14 @@ def handle_prompt():
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    """
-    Verarbeitet einen Chat mit Verlauf. Erwartet JSON mit einem
-    Array "messages", z.B. {"messages": [{"role": "user", "content": "..."}, ...]}.
-    Gibt die Antwort der OpenAI‑API zurück.
-    """
+    """Verarbeitet einen Chatverlauf und gibt die Antwort der OpenAI‑API zurück."""
     data = request.get_json(silent=True) or {}
     messages = data.get("messages", [])
-    # Validierung: Es muss mindestens eine Nachricht vorhanden sein
     if not isinstance(messages, list) or not messages:
         return jsonify({"error": "Keine Nachrichten übergeben."}), 400
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # oder "gpt-4o" bzw. zukünftige Modelle
+            model="gpt-4o",
             messages=messages,
             temperature=0.7,
         )
@@ -75,5 +75,4 @@ def chat():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    # Lokale Entwicklungsumgebung
     app.run(debug=True)
