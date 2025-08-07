@@ -2,38 +2,21 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from openai import OpenAI
 import os
-from dotenv import load_dotenv
 
-# Umgebungsvariablen laden
-load_dotenv()
-
-# Flask-App konfigurieren
+# Flask App initialisieren
 app = Flask(__name__, template_folder="templates")
 CORS(app)
 
-# OpenAI-Client (neues SDK >= 1.0.0)
+# OpenAI-Client initialisieren mit Render-Umgebungsvariable
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route("/")
 def index():
-    return render_template("../index.html")  # index.html liegt außerhalb von /templates
+    return render_template("../index.html")  # Oder nur "index.html", wenn du die Datei verschiebst
 
-@app.route("/api/prompt", methods=["POST"])
-def handle_prompt():
-    data = request.get_json(silent=True) or {}
-    user_prompt = data.get("prompt", "").strip()
-    if not user_prompt:
-        return jsonify({"error": "Kein Prompt übergeben."}), 400
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": user_prompt}],
-            temperature=0.7,
-        )
-        answer = response.choices[0].message.content.strip()
-        return jsonify({"response": answer})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route("/chat")
+def chat_ui():
+    return render_template("chat.html")
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -41,14 +24,14 @@ def chat():
     messages = data.get("messages", [])
     if not isinstance(messages, list) or not messages:
         return jsonify({"error": "Keine Nachrichten übergeben."}), 400
+
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-3.5-turbo",  # oder gpt-4/gpt-4o
             messages=messages,
-            temperature=0.7,
+            temperature=0.7
         )
-        answer = response.choices[0].message.content.strip()
-        return jsonify({"response": answer})
+        return jsonify({"response": response.choices[0].message.content})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
